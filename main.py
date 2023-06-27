@@ -5,14 +5,19 @@ versja_alfa_001
 #importy
 import xml.etree.ElementTree as ET
 from csv import DictReader
+import random
 
+flaga_ik = False
+flaga_dedykowana_lista=False
 lista_kolumn_alfa = [
   "kod", "p", "flux", "sterowanie", "kodbarwy", "IP", "pled"
 ]
-
 lista_kolumn_beta = [
   "kod", "p", "flux", "sterowanie", "kodbarwy", "IP", "IK", "pled"
 ]
+
+lista_kolumn_dedykowana = []
+
 dict_dorostki_danych = {
   "kod": 0,
   "rodzina": 0,
@@ -44,8 +49,7 @@ dict_dorostki_danych = {
   "dyfuzor": 0,
   "wymiary": "mm"
 }
-
-lista_kolumn_dedykowana = []
+lista_xmla = []
 
 # input od operatora okreslenie nazw
 nazwa_pliku_csv = input("Podaj nazwe pliku csv:")
@@ -67,18 +71,6 @@ else:
   print("Wprowadzono nierozpoznawalną komende :", nazwa_ok_Q)
   exit()
 
-# komponenty dla xml'a
-data = ET.Element(rodzina)
-element1 = ET.SubElement(data, 'MODEL')
-s_elem1 = ET.SubElement(element1, 'KOD')
-s_elem2 = ET.SubElement(element1, 'MOC')
-s_elem3 = ET.SubElement(element1, 'FLUX')
-s_elem4 = ET.SubElement(element1, 'CONTROL')
-s_elem5 = ET.SubElement(element1, 'IX')
-s_elem6 = ET.SubElement(element1, 'RACCT')
-s_elem7 = ET.SubElement(element1, 'ROZ')
-s_elem8 = ET.SubElement(element1, 'INNE')
-
 # zapis wartości tekstowej do elementu
 #s_elem1.text = "King's Gambit Accepted"
 
@@ -92,13 +84,21 @@ def odczyt_danych_csv(plik_csv, list_zapisu):
     csv_dict_reader = DictReader(read_obj, delimiter=';')
     for row in csv_dict_reader:
       for elem in list_zapisu:
-        komponent += row[elem] + " @ "
+        dodatek = dict_dorostki_danych.get(elem)
+        element = row[elem]
+        if dodatek == 0:
+          komponent += element + " @ "
+        elif dodatek in element:
+          komponent += element + " @ "
+        else:
+          komponent += element + dodatek + " @ "
       #print(komponent)
       list_wynik.append(komponent[:-3])
       komponent = ""
   list_wynik.pop(0)
   print("Funkcja odczyt_danych_csv wykonana poprawnie ", list_zapisu, "\n")
-  print(list_wynik)
+  #print(list_wynik)
+  return list_wynik
 
 
 def dedekowane_dane_listy(lista):
@@ -109,16 +109,58 @@ def dedekowane_dane_listy(lista):
   )
   input_dla_listy = input("Enter :")
   lista_return = input_dla_listy.split("/")
-  print(lista_return)
+  #print(lista_return)
   lista.extend(lista_return)
 
 
-def obrobienieDanych():
-  return
-
-
-def struktura_xml():
-  return
+def struktura_xml(lista):
+  versja_Xml_input=input("Podaj prosze wersję(liczba naturalna dodatnia od 0 do 2 147 483 647) pliku xml lub wpisz R=> dlarandomowego generowania: ")
+  if versja_Xml_input.isdigit():
+    versja_Xml=versja_Xml_input
+  if versja_Xml_input.isalpha():
+    versja_Xml=random.randint(0,200)
+    
+  nazwa_pliku_xml = rodzina.lower()+"BDXML"+"_versja_"+str(versja_Xml)
+  data = ET.Element(rodzina)
+  i_d = 1
+  for x in lista:
+    element1 = ET.SubElement(data, 'MODEL')
+    s_elem_kod = ET.SubElement(element1, 'KOD')
+    s_elem_moc = ET.SubElement(element1, 'MOC')
+    s_elem_flux = ET.SubElement(element1, 'FLUX')
+    s_elem_cont = ET.SubElement(element1, 'CONTROL')
+    s_elem_ix = ET.SubElement(element1, 'IX')
+    s_elem_racct = ET.SubElement(element1, 'RACCT')
+    s_elem_roz = ET.SubElement(element1, 'ROZ')
+    s_elem_inne = ET.SubElement(element1, 'INNE')
+    element1.set("type", str(i_d))
+    alfa = str(x)
+    beta = alfa.split(" @ ")
+    s_elem_kod.text = beta[0]
+    s_elem_moc.text = beta[1]
+    s_elem_flux.text = beta[2]
+    s_elem_cont.text = beta[3]
+    if flaga_ik:
+      s_elem_ix.text = beta[5] + " & " + beta[6]
+      str_gamma = str(beta[4])
+      str_ra = "Ra" + str_gamma[0] + "0"
+      str_cct = " & " + str_gamma[1:] + "00K"
+      s_elem_racct.text = str_ra + str_cct
+      s_elem_roz.text = beta[7]
+      s_elem_inne.text = "null"
+    else :
+        s_elem_ix.text = beta[5]
+        str_gamma = str(beta[4])
+        str_ra = "Ra" + str_gamma[0] + "0"
+        str_cct = " & " + str_gamma[1:] + "00K"
+        s_elem_racct.text = str_ra + str_cct
+        s_elem_roz.text = beta[6]
+        s_elem_inne.text = "null"
+    
+    i_d += 1
+    b_xml = ET.tostring(data,encoding="utf-8",method='xml',xml_declaration=True)
+  with open(nazwa_pliku_xml+".xml", "wb") as f:
+    f.write(b_xml)
 
 
 print("\n Standard danych do pobrania z csv to 'Nova' czyli :\n",
@@ -129,11 +171,17 @@ inpuT_funkcje = input(
 print("wybrana opcja :", inpuT_funkcje.upper())
 
 if inpuT_funkcje.upper() == "N":
-  odczyt_danych_csv(nazwa_pliku_csv, lista_kolumn_beta)
+  lista_wynikowa_odczytu = odczyt_danych_csv(nazwa_pliku_csv,
+                                             lista_kolumn_beta)
+  flaga_ik = True
 elif inpuT_funkcje.upper() == "B":
-  odczyt_danych_csv(nazwa_pliku_csv, lista_kolumn_alfa)
+  lista_wynikowa_odczytu = odczyt_danych_csv(nazwa_pliku_csv,
+                                             lista_kolumn_alfa)
 elif inpuT_funkcje.upper() == "L":
   dedekowane_dane_listy(lista_kolumn_dedykowana)
-  odczyt_danych_csv(nazwa_pliku_csv, lista_kolumn_dedykowana)
+  lista_wynikowa_odczytu = odczyt_danych_csv(nazwa_pliku_csv,
+                                             lista_kolumn_dedykowana)
 
+#print(lista_wynikowa_odczytu)
+struktura_xml(lista_wynikowa_odczytu)
 print("koniec programu")
