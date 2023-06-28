@@ -102,8 +102,8 @@ def odczyt_danych_csv(plik_csv, list_zapisu):
       list_wynik.append(komponent[:-3])
       komponent = ""
   list_wynik.pop(0)
-  print("Funkcja odczyt_danych_csv wykonana poprawnie ", list_zapisu, "\n")
-  print("lista wynikowa", list_wynik)
+  print("Funkcja odczyt_danych_csv wykonana poprawnie \n")
+  #print("lista wynikowa", list_wynik)
   return list_wynik
 
 
