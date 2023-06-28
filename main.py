@@ -8,14 +8,17 @@ from csv import DictReader
 import random
 
 flaga_ik = False
-flaga_dedykowana_lista=False
+flaga_dedykowana_lista = False
 lista_kolumn_alfa = [
-  "kod", "p", "flux", "sterowanie", "kodbarwy", "IP", "pled"
+  "kod", "kodbarwy", "p", "flux", "sterowanie", "IP", "pled"
 ]
-lista_kolumn_beta = [
-  "kod", "p", "flux", "sterowanie", "kodbarwy", "IP", "IK", "pled"
+lista_subElementów_alfa = [
+  "KOD", "RACCT", "MOC", "FLUX", "CONTROL", "IX", "ROZ"
 ]
 
+lista_kolumn_beta = [
+  "kod", "kodbarwy", "p", "flux", "sterowanie", "IP", "IK", "pled"
+]
 lista_kolumn_dedykowana = []
 
 dict_dorostki_danych = {
@@ -49,7 +52,6 @@ dict_dorostki_danych = {
   "dyfuzor": 0,
   "wymiary": "mm"
 }
-lista_xmla = []
 
 # input od operatora okreslenie nazw
 nazwa_pliku_csv = input("Podaj nazwe pliku csv:")
@@ -71,10 +73,6 @@ else:
   print("Wprowadzono nierozpoznawalną komende :", nazwa_ok_Q)
   exit()
 
-# zapis wartości tekstowej do elementu
-#s_elem1.text = "King's Gambit Accepted"
-
-
 # definicjia dla odczytu danych z pliku
 def odczyt_danych_csv(plik_csv, list_zapisu):
   print("Start dla odczyt_danych_csv")
@@ -92,74 +90,90 @@ def odczyt_danych_csv(plik_csv, list_zapisu):
           komponent += element + " @ "
         else:
           komponent += element + dodatek + " @ "
-      #print(komponent)
+      #print("komponent",komponent)
       list_wynik.append(komponent[:-3])
       komponent = ""
   list_wynik.pop(0)
   print("Funkcja odczyt_danych_csv wykonana poprawnie ", list_zapisu, "\n")
-  #print(list_wynik)
+  print("lista wynikowa",list_wynik)
   return list_wynik
 
-
-def dedekowane_dane_listy(lista):
-  lista_kolumn_dedykowana.clear()
-  print("Funkcja dedekowane_dane_listy start \n")
+def dedekowane_dane_listy():
+  lista = ["kod", "kodbarwy", "p"]
+  print(
+    "Funkcja dedekowane_dane_listy start \n Na stałe wpisane są kod/kodbarwy/p"
+  )
   print(
     "Wprowadż poniżej dane. Formuła: \n nazwa kolumn w csv, nastepnie znak '/' np:\n kod/psu/ppsu/kolor\n"
   )
   input_dla_listy = input("Enter :")
   lista_return = input_dla_listy.split("/")
-  #print(lista_return)
+  print("lista_return",lista_return)
   lista.extend(lista_return)
-
+  print("lista dedykowana",lista)
+  return lista
 
 def struktura_xml(lista):
-  versja_Xml_input=input("Podaj prosze wersję(liczba naturalna dodatnia od 0 do 2 147 483 647) pliku xml lub wpisz R=> dlarandomowego generowania: ")
+  versja_Xml_input = input(
+    "Podaj prosze wersję(liczba naturalna dodatnia od 0 do 2 147 483 647) pliku xml lub wpisz R=> dlarandomowego generowania: "
+  )
   if versja_Xml_input.isdigit():
-    versja_Xml=versja_Xml_input
+    versja_Xml = versja_Xml_input
   if versja_Xml_input.isalpha():
-    versja_Xml=random.randint(0,200)
-    
-  nazwa_pliku_xml = rodzina.lower()+"BDXML"+"_versja_"+str(versja_Xml)
+    versja_Xml = random.randint(0, 200)
+
+  nazwa_pliku_xml = rodzina.lower() + "_BDXML" + "_versja_" + str(versja_Xml)
   data = ET.Element(rodzina)
   i_d = 1
   for x in lista:
     element1 = ET.SubElement(data, 'MODEL')
-    s_elem_kod = ET.SubElement(element1, 'KOD')
-    s_elem_moc = ET.SubElement(element1, 'MOC')
-    s_elem_flux = ET.SubElement(element1, 'FLUX')
-    s_elem_cont = ET.SubElement(element1, 'CONTROL')
-    s_elem_ix = ET.SubElement(element1, 'IX')
-    s_elem_racct = ET.SubElement(element1, 'RACCT')
-    s_elem_roz = ET.SubElement(element1, 'ROZ')
-    s_elem_inne = ET.SubElement(element1, 'INNE')
-    element1.set("type", str(i_d))
-    alfa = str(x)
-    beta = alfa.split(" @ ")
-    s_elem_kod.text = beta[0]
-    s_elem_moc.text = beta[1]
-    s_elem_flux.text = beta[2]
-    s_elem_cont.text = beta[3]
-    if flaga_ik:
-      s_elem_ix.text = beta[5] + " & " + beta[6]
-      str_gamma = str(beta[4])
-      str_ra = "Ra" + str_gamma[0] + "0"
-      str_cct = " & " + str_gamma[1:] + "00K"
-      s_elem_racct.text = str_ra + str_cct
-      s_elem_roz.text = beta[7]
-      s_elem_inne.text = "null"
-    else :
-        s_elem_ix.text = beta[5]
-        str_gamma = str(beta[4])
-        str_ra = "Ra" + str_gamma[0] + "0"
-        str_cct = " & " + str_gamma[1:] + "00K"
-        s_elem_racct.text = str_ra + str_cct
-        s_elem_roz.text = beta[6]
-        s_elem_inne.text = "null"
-    
+    element1.set("id", str(i_d))
+    lista_alfa = str(x)
+    lista_beta = lista_alfa.split(" @ ")
+    for y in lista_beta:
+      if "GL" in y:
+        sub_elem = ET.SubElement(element1, 'KOD')
+        sub_elem.text = y
+      #print(lista_beta.index(y), y,type(y),len(y),y[-1])
+      elif lista_beta.index(y) == 1:
+        if len(y) == 3 and y[-1] == "0":
+          racct = "Ra" + y[0] + "0 & " + y[1:] + "00K"
+          sub_elem = ET.SubElement(element1, 'RACCT')
+          sub_elem.text = racct
+        else:
+          sub_elem = ET.SubElement(element1, 'RACCT')
+          sub_elem.text = y
+      elif "W" in y and "GL" not in y:
+        sub_elem = ET.SubElement(element1, 'MOC')
+        sub_elem.text = y
+      elif "lm" in y:
+        sub_elem = ET.SubElement(element1, 'FLUX')
+        sub_elem.text = y
+      elif "°" in y:
+        sub_elem = ET.SubElement(element1, 'ROZ')
+        sub_elem.text = y
+      elif y[0] == 'I':
+        sub_elem = ET.SubElement(element1, y[0:2])
+        sub_elem.text = y
+      else:
+        nazwa_elementu = 'elem_'
+        liczba = lista_beta.index(y)
+        if flaga_ik == False and flaga_dedykowana_lista == False:
+          nazwa_elementu += lista_kolumn_alfa[liczba]
+        elif flaga_dedykowana_lista:
+          nazwa_elementu += lista_kolumn_dedykowana[liczba]
+        elif flaga_ik:
+          nazwa_elementu += lista_kolumn_beta[liczba]
+        else:
+          print("problem w struktura_xml dolny sektor if")
+        sub_elem = ET.SubElement(element1, nazwa_elementu)
+        sub_elem.text = y
     i_d += 1
-    b_xml = ET.tostring(data,encoding="utf-8",method='xml',xml_declaration=True)
-  with open(nazwa_pliku_xml+".xml", "wb") as f:
+    b_xml = ET.tostring(data,
+                        encoding="utf-8",
+                        method='xml',
+                        xml_declaration=True)
+  with open(nazwa_pliku_xml + ".xml", "wb") as f:
     f.write(b_xml)
 
 
@@ -178,10 +192,12 @@ elif inpuT_funkcje.upper() == "B":
   lista_wynikowa_odczytu = odczyt_danych_csv(nazwa_pliku_csv,
                                              lista_kolumn_alfa)
 elif inpuT_funkcje.upper() == "L":
-  dedekowane_dane_listy(lista_kolumn_dedykowana)
+  flaga_dedykowana_lista=True
+  lista_kolumn_dedykowana=dedekowane_dane_listy()
   lista_wynikowa_odczytu = odczyt_danych_csv(nazwa_pliku_csv,
                                              lista_kolumn_dedykowana)
 
-#print(lista_wynikowa_odczytu)
+
+print(lista_wynikowa_odczytu)
 struktura_xml(lista_wynikowa_odczytu)
 print("koniec programu")
