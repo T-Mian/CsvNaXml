@@ -10,12 +10,12 @@ from csv import DictReader
 import random
 
 #flaga bool
-flaga_ik = False
+flaga_ip = False
 flaga_dedykowana_lista = False
 
 # listy do urzycia
 lista_kolumn_alfa = [
-  "kod", "kodbarwy", "p", "flux", "sterowanie", "IP", "pled"
+  "kod", "kodbarwy", "p", "flux", "sterowanie", "IK", "pled"
 ]
 lista_subElementów_alfa = [
   "KOD", "RACCT", "MOC", "FLUX", "CONTROL", "IX", "ROZ"
@@ -127,7 +127,7 @@ def dedekowane_dane_listy():
 # definicjia: tworzenie pliku xml
 def struktura_xml(lista):
   versja_Xml_input = input(
-    "Podaj prosze wersję(liczba naturalna dodatnia od 0 do 2 147 483 647) pliku xml lub wpisz R=> dlarandomowego generowania: "
+    "Podaj prosze wersję(liczba naturalna dodatnia od 0 do 2 147 483 647) pliku xml lub wpisz R=> dla randomowego generowania: "
   )
   if versja_Xml_input.isdigit():
     versja_Xml = versja_Xml_input
@@ -155,30 +155,32 @@ def struktura_xml(lista):
         else:
           sub_elem = ET.SubElement(element1, 'RACCT')
           sub_elem.text = y
-      elif "W" in y and "GL" not in y:
+      elif "W" in y and "GL" not in y and "lm" not in y:
         sub_elem = ET.SubElement(element1, 'MOC')
         sub_elem.text = y
-      elif "lm" in y:
+      elif "lm" in y and "W" not in y:
         sub_elem = ET.SubElement(element1, 'FLUX')
         sub_elem.text = y
       elif "°" in y:
-        if len(y)<5:
+        if len(y)<5 or "x" in y:
+          y=y.replace("x","°x")
+          y=y.replace("°°x","°x")
           sub_elem = ET.SubElement(element1, 'ROZ')
           sub_elem.text = y
         else :
           sub_elem = ET.SubElement(element1, 'ROZ')
           sub_elem.text = y[0:-1]
-      elif y[0] == 'I':
+      elif y[0] == 'I' and len(y)>3:
         sub_elem = ET.SubElement(element1, y[0:2])
         sub_elem.text = y
       else:
         nazwa_elementu = 'elem_'
         liczba = lista_beta.index(y)
-        if flaga_ik == False and flaga_dedykowana_lista == False:
+        if flaga_ip == False and flaga_dedykowana_lista == False:
           nazwa_elementu += lista_kolumn_alfa[liczba]
         elif flaga_dedykowana_lista:
           nazwa_elementu += lista_kolumn_dedykowana[liczba]
-        elif flaga_ik:
+        elif flaga_ip:
           nazwa_elementu += lista_kolumn_beta[liczba]
         else:
           print("problem w struktura_xml dolny sektor if")
@@ -197,7 +199,7 @@ def struktura_xml(lista):
 print("\n Standard danych do pobrania z csv to 'Nova' czyli :\n",
       lista_kolumn_beta, "\n")
 inpuT_funkcje = input(
-  "\n Wprowadzić 'N' => dla 'Nova', 'B'=> dla csv bez 'IK', 'L'=> dla chęci wprowadzenia własnej listy :"
+  "\n Wprowadzić 'N' => dla 'Nova', 'B'=> dla csv bez 'IP', 'L'=> dla chęci wprowadzenia własnej listy :"
 )
 print("wybrana opcja :", inpuT_funkcje.upper())
 
@@ -205,7 +207,7 @@ print("wybrana opcja :", inpuT_funkcje.upper())
 if inpuT_funkcje.upper() == "N":
   lista_wynikowa_odczytu = odczyt_danych_csv(nazwa_pliku_csv,
                                              lista_kolumn_beta)
-  flaga_ik = True
+  flaga_ip = True
 elif inpuT_funkcje.upper() == "B":
   lista_wynikowa_odczytu = odczyt_danych_csv(nazwa_pliku_csv,
                                              lista_kolumn_alfa)
