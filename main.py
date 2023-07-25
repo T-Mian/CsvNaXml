@@ -2,7 +2,7 @@
 Tomasz Mianecki
 Program do zmiany plików csv zawierajacych dane dla kart produktu
 na pliki xml do użytku dla strony Globus Lighting wersja ang/fra
-versja_alfa_1.2
+versja_alfa_2.0
 """
 #importy
 import xml.etree.ElementTree as ET
@@ -123,6 +123,22 @@ def dedekowane_dane_listy():
   print("lista dedykowana", lista)
   return lista
 
+# definicjia dodająca tail (nowa linia) po każdym element.
+def indent(elem, level=0):
+    i = "\n" + level*"  "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+        for elem in elem:
+            indent(elem, level+1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
+
 
 # definicjia: tworzenie pliku xml
 def struktura_xml(lista):
@@ -191,8 +207,13 @@ def struktura_xml(lista):
                         encoding="utf-8",
                         method='xml',
                         xml_declaration=True)
-  with open(nazwa_pliku_xml + ".xml", "wb") as f:
-    f.write(b_xml)
+    root =ET.fromstring(b_xml)
+    tree = ET.ElementTree(root)
+    indent(root)
+    tree.write(nazwa_pliku_xml + ".xml", encoding="utf-8", xml_declaration=True)
+  #with open(nazwa_pliku_xml + ".xml", "wb") as f:
+ #   print(b_xml)
+  #  f.write(b_xml)
 
 
 # input określający jaką liste z kolumnami wybrać
