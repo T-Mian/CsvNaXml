@@ -2,7 +2,7 @@
 Tomasz Mianecki
 Program do zmiany plików csv zawierajacych dane dla kart produktu
 na pliki xml do użytku dla strony Globus Lighting wersja ang/fra
-versja_alfa_2.0
+versja_alfa_1.2
 """
 #importy
 import xml.etree.ElementTree as ET
@@ -10,12 +10,12 @@ from csv import DictReader
 import random
 
 #flaga bool
-flaga_ip = False
+flaga_ik = False
 flaga_dedykowana_lista = False
 
 # listy do urzycia
 lista_kolumn_alfa = [
-  "kod", "kodbarwy", "p", "flux", "sterowanie", "IK", "pled"
+  "kod", "kodbarwy", "p", "flux", "sterowanie", "IP", "pled"
 ]
 lista_subElementów_alfa = [
   "KOD", "RACCT", "MOC", "FLUX", "CONTROL", "IX", "ROZ"
@@ -86,7 +86,7 @@ def odczyt_danych_csv(plik_csv, list_zapisu):
   print("Start dla odczyt_danych_csv")
   list_wynik = []
   komponent = ""
-  with open(plik_csv + '.csv', mode='r',errors='ignore') as read_obj:
+  with open(plik_csv + '.csv', mode='r') as read_obj:
     csv_dict_reader = DictReader(read_obj, delimiter=';')
     for row in csv_dict_reader:
       for elem in list_zapisu:
@@ -124,27 +124,10 @@ def dedekowane_dane_listy():
   return lista
 
 
-# definicjia dodająca tail (nowa linia) po każdym element.
-def indent(elem, level=0):
-  i = "\n" + level * "  "
-  if len(elem):
-    if not elem.text or not elem.text.strip():
-      elem.text = i + "  "
-    if not elem.tail or not elem.tail.strip():
-      elem.tail = i
-    for elem in elem:
-      indent(elem, level + 1)
-    if not elem.tail or not elem.tail.strip():
-      elem.tail = i
-  else:
-    if level and (not elem.tail or not elem.tail.strip()):
-      elem.tail = i
-
-
 # definicjia: tworzenie pliku xml
 def struktura_xml(lista):
   versja_Xml_input = input(
-    "Podaj prosze wersję(liczba naturalna dodatnia od 0 do 2 147 483 647) pliku xml lub wpisz R=> dla randomowego generowania: "
+    "Podaj prosze wersję(liczba naturalna dodatnia od 0 do 2 147 483 647) pliku xml lub wpisz R=> dlarandomowego generowania: "
   )
   if versja_Xml_input.isdigit():
     versja_Xml = versja_Xml_input
@@ -169,39 +152,33 @@ def struktura_xml(lista):
           racct = "Ra" + y[0] + "0 & " + y[1:] + "00K"
           sub_elem = ET.SubElement(element1, 'RACCT')
           sub_elem.text = racct
-        elif len(y) == 3 and y[1] != "0" and y[0] != "R":
-          racct = "Ra" + y[0] + "0 & " + y[1:] + "00K"
-          sub_elem = ET.SubElement(element1, 'RACCT')
-          sub_elem.text = racct
         else:
           sub_elem = ET.SubElement(element1, 'RACCT')
           sub_elem.text = y
-      elif "W" in y and "GL" not in y and "lm" not in y:
+      elif "W" in y and "GL" not in y:
         sub_elem = ET.SubElement(element1, 'MOC')
         sub_elem.text = y
-      elif "lm" in y and "W" not in y:
+      elif "lm" in y:
         sub_elem = ET.SubElement(element1, 'FLUX')
         sub_elem.text = y
       elif "°" in y:
-        if len(y) < 5 or "x" in y:
-          y = y.replace("x", "°x")
-          y = y.replace("°°x", "°x")
+        if len(y)<5:
           sub_elem = ET.SubElement(element1, 'ROZ')
           sub_elem.text = y
-        else:
+        else :
           sub_elem = ET.SubElement(element1, 'ROZ')
           sub_elem.text = y[0:-1]
-      elif y[0] == 'I' and len(y) > 3:
+      elif y[0] == 'I':
         sub_elem = ET.SubElement(element1, y[0:2])
         sub_elem.text = y
       else:
         nazwa_elementu = 'elem_'
         liczba = lista_beta.index(y)
-        if flaga_ip == False and flaga_dedykowana_lista == False:
+        if flaga_ik == False and flaga_dedykowana_lista == False:
           nazwa_elementu += lista_kolumn_alfa[liczba]
         elif flaga_dedykowana_lista:
           nazwa_elementu += lista_kolumn_dedykowana[liczba]
-        elif flaga_ip:
+        elif flaga_ik:
           nazwa_elementu += lista_kolumn_beta[liczba]
         else:
           print("problem w struktura_xml dolny sektor if")
@@ -212,22 +189,15 @@ def struktura_xml(lista):
                         encoding="utf-8",
                         method='xml',
                         xml_declaration=True)
-    root = ET.fromstring(b_xml)
-    tree = ET.ElementTree(root)
-    indent(root)
-    tree.write(nazwa_pliku_xml + ".xml",
-               encoding="utf-8",
-               xml_declaration=True)
-  #with open(nazwa_pliku_xml + ".xml", "wb") as f:
-#   print(b_xml)
-#  f.write(b_xml)
+  with open(nazwa_pliku_xml + ".xml", "wb") as f:
+    f.write(b_xml)
 
 
 # input określający jaką liste z kolumnami wybrać
 print("\n Standard danych do pobrania z csv to 'Nova' czyli :\n",
       lista_kolumn_beta, "\n")
 inpuT_funkcje = input(
-  "\n Wprowadzić 'N' => dla 'Nova', 'B'=> dla csv bez 'IP', 'L'=> dla chęci wprowadzenia własnej listy :"
+  "\n Wprowadzić 'N' => dla 'Nova', 'B'=> dla csv bez 'IK', 'L'=> dla chęci wprowadzenia własnej listy :"
 )
 print("wybrana opcja :", inpuT_funkcje.upper())
 
@@ -235,7 +205,7 @@ print("wybrana opcja :", inpuT_funkcje.upper())
 if inpuT_funkcje.upper() == "N":
   lista_wynikowa_odczytu = odczyt_danych_csv(nazwa_pliku_csv,
                                              lista_kolumn_beta)
-  flaga_ip = True
+  flaga_ik = True
 elif inpuT_funkcje.upper() == "B":
   lista_wynikowa_odczytu = odczyt_danych_csv(nazwa_pliku_csv,
                                              lista_kolumn_alfa)
