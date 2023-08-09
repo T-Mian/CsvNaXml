@@ -162,10 +162,10 @@ def struktura_xml(lista):
         sub_elem = ET.SubElement(element1, 'FLUX')
         sub_elem.text = y
       elif "°" in y:
-        if len(y)<5:
+        if len(y) < 5:
           sub_elem = ET.SubElement(element1, 'ROZ')
           sub_elem.text = y
-        else :
+        else:
           sub_elem = ET.SubElement(element1, 'ROZ')
           sub_elem.text = y[0:-1]
       elif y[0] == 'I':

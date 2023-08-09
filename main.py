@@ -86,7 +86,7 @@ def odczyt_danych_csv(plik_csv, list_zapisu):
   print("Start dla odczyt_danych_csv")
   list_wynik = []
   komponent = ""
-  with open(plik_csv + '.csv', mode='r',errors='ignore') as read_obj:
+  with open(plik_csv + '.csv', mode='r', errors='ignore') as read_obj:
     csv_dict_reader = DictReader(read_obj, delimiter=';')
     for row in csv_dict_reader:
       for elem in list_zapisu:
@@ -219,9 +219,10 @@ def struktura_xml(lista):
                encoding="utf-8",
                xml_declaration=True)
   #with open(nazwa_pliku_xml + ".xml", "wb") as f:
+
+
 #   print(b_xml)
 #  f.write(b_xml)
-
 
 # input określający jaką liste z kolumnami wybrać
 print("\n Standard danych do pobrania z csv to 'Nova' czyli :\n",
